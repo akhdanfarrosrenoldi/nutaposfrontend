@@ -5,74 +5,93 @@
         <!-- Header -->
         <v-row class="ma-0">
           <v-col cols="12" class="pa-4">
-            <h1 class="text-h5 font-weight-bold text-black">Daftar Diskon</h1>
+            <h1 class="text-h5 font-weight-bold text-black mb-3">Daftar Diskon</h1>
+            <v-btn
+              variant="outlined"
+              size="small"
+              class="text-none"
+              prepend-icon="mdi-store"
+              @click="openOutletModal"
+            >
+              {{ selectedOutlet ? selectedOutlet.name : 'Pilih Outlet' }}
+              <v-icon class="ml-1">mdi-chevron-down</v-icon>
+            </v-btn>
           </v-col>
         </v-row>
 
         <!-- Content Area -->
-        <v-row class="ma-0 fill-height" justify="center" align="center" style="min-height: 70vh">
-          <v-col cols="12" class="text-center">
-            <v-card
-              variant="outlined"
-              class="mx-12 py-16 rounded-xl content-border"
-              style="border-color: #ecedef"
-            >
-              <!-- Illustration Placeholder -->
-              <div class="illustration-container mb-8">
-                <div class="illustration-box">
-                  <div class="illustration-content">
-                    <div class="illustration-text">
-                      <div class="text-caption text-black font-weight-bold mb-1">Illustration</div>
-                      <div class="text-caption text-grey">Size 240 x 135</div>
-                    </div>
+        <div v-if="discountList.length === 0">
+          <v-row class="ma-0 fill-height" justify="center" align="center" style="min-height: 70vh">
+            <v-col cols="12" class="text-center">
+              <v-card
+                variant="outlined"
+                class="mx-12 py-16 rounded-xl content-border"
+                style="border-color: #ecedef"
+              >
+                <!-- Illustration -->
+                <div class="illustration-container mb-8">
+                  <div class="empty-state-illustration">
+                    <img
+                      src="@/assets/il_empty_state_discount_not_available.svg"
+                      alt="No Discount Available"
+                      style="width: 240px; height: 135px"
+                    />
                   </div>
                 </div>
-              </div>
 
-              <!-- Main Message -->
-              <h2
-                class="text-h6 font-weight-medium text-grey-darken-2 mb-3"
-                :class="{ 'outlet-selected': selectedOutlet }"
-              >
-                {{ outletDisplayText }}
-              </h2>
+                <!-- Main Message -->
+                <h2
+                  class="text-h6 font-weight-medium text-grey-darken-2 mb-3"
+                  :class="{ 'outlet-selected': selectedOutlet }"
+                >
+                  {{ selectedOutlet ? "Belum Ada Diskon" : outletDisplayText }}
+                </h2>
 
-              <!-- Subtitle -->
-              <p v-if="!selectedOutlet" class="text-body-2 text-grey mb-8">
-                Silahkan pilih outlet terlebih dahulu.
+                <!-- Subtitle -->
+                <p class="text-body-2 text-grey mb-8">
+                Silahkan tambah diskon untuk menarik pelanggan dan meningkatkan penjualan.
               </p>
 
               <!-- Action Button -->
               <v-btn
                 color="success"
-                variant="tonal"
+                variant="flat"
                 size="large"
                 rounded="lg"
                 class="px-8 py-3"
                 style="text-transform: none; font-weight: 500"
-                @click="openOutletModal"
+                prepend-icon="mdi-plus"
+                @click="openTambahDiskonModal"
               >
-                {{ selectedOutlet ? "Ganti outlet" : "Pilih outlet" }}
+                Tambah diskon
               </v-btn>
-
-              <!-- Selected Outlet Info -->
-              <div v-if="selectedOutlet" class="outlet-info mt-4">
-                <v-card variant="outlined" class="pa-4">
-                  <div class="d-flex align-center">
-                    <v-icon color="success" class="mr-3">mdi-store</v-icon>
-                    <div>
-                      <div class="font-weight-bold">{{ selectedOutlet.name }}</div>
-                      <div class="text-body-2 text-grey-600">{{ selectedOutlet.address }}</div>
-                    </div>
-                  </div>
-                </v-card>
-              </div>
             </v-card>
           </v-col>
         </v-row>
+        </div>
+
+        <!-- Daftar Diskon Component -->
+        <div v-if="discountList.length > 0">
+          <Daftar 
+            :discount-list="discountList" 
+            @back="backToEmptyState"
+            @add-discount="openTambahDiskonModal"
+            @update-discount="onDiskonUpdate"
+            @delete-discounts="onDiskonDelete"
+          />
+        </div>
 
         <!-- Pilih Outlet Modal -->
-        <PilihOutletModal v-model="showOutletModal" @outlet-selected="onOutletSelected" />
+    <PilihOutletModal
+      v-model="showOutletModal"
+      @outlet-selected="onOutletSelected"
+    />
+
+    <!-- Tambah Diskon Modal -->
+    <TambahDiskonModal
+      v-model="showTambahDiskonModal"
+      @submit="onDiskonSubmit"
+    />
 
         <!-- Footer -->
         <v-row class="ma-0 mt-auto">
@@ -88,11 +107,15 @@
 <script setup>
 import { ref, computed } from "vue";
 import PilihOutletModal from "./modal/PilihOutletModal.vue";
+import TambahDiskonModal from "./modal/TambahDiskonModal.vue";
+import Daftar from "./Daftar.vue";
 import ApiService from "../../services/api.js";
 
 // Reactive state
 const showOutletModal = ref(false);
+const showTambahDiskonModal = ref(false);
 const selectedOutlet = ref(null);
+const discountList = ref([]);
 
 // Computed untuk menampilkan nama outlet atau pesan default
 const outletDisplayText = computed(() => {
@@ -112,6 +135,61 @@ const onOutletSelected = (outlet) => {
   showOutletModal.value = false;
   console.log("Outlet selected:", outlet);
 };
+
+const openTambahDiskonModal = () => {
+  showTambahDiskonModal.value = true;
+};
+
+const onDiskonSubmit = async (diskonData) => {
+  try {
+    console.log("Diskon data:", diskonData);
+    
+    // Add new discount to the list
+    const newDiscount = {
+      id: Date.now(), // Simple ID generation
+      name: diskonData.nama,
+      value: diskonData.nilai,
+      type: diskonData.tipe,
+      isNew: true
+    };
+    
+    discountList.value.push(newDiscount);
+    
+    // TODO: Implement API call to save discount
+    // await ApiService.post('/diskon', diskonData);
+    
+    showTambahDiskonModal.value = false;
+  } catch (error) {
+    console.error("Error saving discount:", error);
+  }
+};
+
+const backToEmptyState = () => {
+  discountList.value = [];
+};
+
+const onDiskonUpdate = (updatedData) => {
+  const index = discountList.value.findIndex(item => item.id === updatedData.id);
+  if (index !== -1) {
+    discountList.value[index] = {
+      ...discountList.value[index],
+      name: updatedData.nama,
+      value: updatedData.nilai,
+      type: updatedData.tipe
+    };
+  }
+};
+
+const onDiskonDelete = (selectedIds) => {
+  // Remove selected discounts from the list
+  discountList.value = discountList.value.filter(item => !selectedIds.includes(item.id));
+  
+  // TODO: Implement API call to delete discounts
+  // await ApiService.delete('/diskon', { ids: selectedIds });
+  
+  console.log('Deleted discount IDs:', selectedIds);
+};
+
 </script>
 
 <style>

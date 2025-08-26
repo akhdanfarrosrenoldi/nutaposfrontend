@@ -1,5 +1,5 @@
 // API Service untuk CrudCrud
-const API_BASE_URL = 'https://crudcrud.com/api/d7d7ddb4ae7f47358d2164b8916f6189'
+const API_BASE_URL = 'https://crudcrud.com/api/e53e57090d804a6b9c7c701c236cd708'
 
 class ApiService {
   // Generic method untuk HTTP requests
