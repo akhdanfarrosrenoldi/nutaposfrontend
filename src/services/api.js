@@ -44,6 +44,10 @@ class ApiService {
         const response = await fetch(url, config)
         
         if (!response.ok) {
+          // If API key expired or invalid, switch to mock
+          if (response.status === 401 || response.status === 403) {
+            throw new Error('API key expired or invalid')
+          }
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         
@@ -51,8 +55,15 @@ class ApiService {
         const text = await response.text()
         return text ? JSON.parse(text) : null
       } catch (error) {
-        console.warn('Real API failed, switching to mock mode:', error)
-        this.useMock = true
+        console.warn('Real API failed:', error.message)
+        
+        // Automatically switch to mock mode for network errors or expired API
+        if (error.message.includes('Failed to fetch') || 
+            error.message.includes('API key expired')) {
+          this.useMock = true
+          console.warn('Switching to mock mode')
+        }
+        
         // Fall through to mock implementation
       }
     }

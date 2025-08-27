@@ -52,14 +52,21 @@
                 placeholder="0"
                 variant="outlined"
                 density="comfortable"
-                type="number"
+                type="text"
                 :rules="diskonRules"
                 :error="!!diskonError"
                 :error-messages="diskonError"
                 hide-details="auto"
                 class="flex-grow-1"
                 :class="{ 'error-field': !!diskonError }"
-              ></v-text-field>
+              >
+                <template v-if="formData.tipeDiskon === 'rupiah'" #prepend-inner>
+                  <span class="text-grey-darken-1 text-caption font-weight-light ml-2"> Rp </span>
+                </template>
+                <template v-if="formData.tipeDiskon === 'persen'" #append-inner>
+                  <span class="text-grey-darken-1 text-caption font-weight-light mr-2"> % </span>
+                </template>
+              </v-text-field>
 
               <!-- Toggle Buttons -->
               <v-btn-toggle
