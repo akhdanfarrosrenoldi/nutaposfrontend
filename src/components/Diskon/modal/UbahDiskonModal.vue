@@ -214,10 +214,10 @@ const submitForm = async () => {
 
 <style scoped>
 .error-field :deep(.v-field__outline) {
-  border-color: #f44336 !important;
+  border-color: #ff3553 !important;
 }
 
-.error-field :deep(.v-messages__message) {
-  color: #f44336 !important;
+:deep(.v-messages__message) {
+  color: #ff3553 !important;
 }
 </style>

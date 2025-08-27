@@ -1,35 +1,147 @@
-// API Service untuk CrudCrud
-const API_BASE_URL = 'https://crudcrud.com/api/e53e57090d804a6b9c7c701c236cd708'
-
+// API Service using crudcrud.com with mock fallback
 class ApiService {
-  // Generic method untuk HTTP requests
+  constructor() {
+    this.baseURL = 'https://crudcrud.com/api/e53e57090d804a6b9c7c701c236cd708'
+    this.useMock = false
+    this.initializeLocalStorage()
+  }
+
+  // Initialize localStorage with default data for mock
+  initializeLocalStorage() {
+    if (!localStorage.getItem('outlets')) {
+      localStorage.setItem('outlets', JSON.stringify([]))
+    }
+    if (!localStorage.getItem('discounts')) {
+      localStorage.setItem('discounts', JSON.stringify([]))
+    }
+  }
+
+  // Generate unique ID for mock
+  generateId() {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9)
+  }
+
+  // HTTP request method with mock fallback
   async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
+    // Try real API first
+    if (!this.useMock) {
+      try {
+        const url = `${this.baseURL}${endpoint}`
+        
+        const config = {
+          method: options.method || 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+          },
+          ...options
+        }
+
+        if (options.body && typeof options.body === 'object') {
+          config.body = JSON.stringify(options.body)
+        }
+        
+        const response = await fetch(url, config)
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        // Handle empty responses (like DELETE)
+        const text = await response.text()
+        return text ? JSON.parse(text) : null
+      } catch (error) {
+        console.warn('Real API failed, switching to mock mode:', error)
+        this.useMock = true
+        // Fall through to mock implementation
+      }
     }
 
+    // Use mock API
+    const [, resource, id] = endpoint.split('/')
+    const method = options.method || 'GET'
+    
     try {
-      const response = await fetch(url, config)
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      switch (method) {
+        case 'GET':
+          return this.mockGet(resource, id)
+        case 'POST':
+          return this.mockPost(resource, JSON.parse(options.body || '{}'))
+        case 'PUT':
+          return this.mockPut(resource, id, JSON.parse(options.body || '{}'))
+        case 'DELETE':
+          return this.mockDelete(resource, id)
+        default:
+          throw new Error(`Unsupported method: ${method}`)
       }
-      
-      // Handle empty response (204 No Content)
-      if (response.status === 204) {
-        return null
-      }
-      
-      return await response.json()
     } catch (error) {
-      console.error('API request failed:', error)
+      console.error('Mock API request failed:', error)
       throw error
     }
+  }
+
+  // Mock GET method
+  mockGet(resource, id) {
+    const data = JSON.parse(localStorage.getItem(resource) || '[]')
+    
+    if (id) {
+      const item = data.find(item => item._id === id)
+      if (!item) {
+        throw new Error(`${resource} with id ${id} not found`)
+      }
+      return item
+    }
+    
+    return data
+  }
+
+  // Mock POST method
+  mockPost(resource, newItem) {
+    const data = JSON.parse(localStorage.getItem(resource) || '[]')
+    const itemWithId = {
+      ...newItem,
+      _id: this.generateId(),
+      createdAt: new Date().toISOString()
+    }
+    
+    data.push(itemWithId)
+    localStorage.setItem(resource, JSON.stringify(data))
+    
+    return itemWithId
+  }
+
+  // Mock PUT method
+  mockPut(resource, id, updatedItem) {
+    const data = JSON.parse(localStorage.getItem(resource) || '[]')
+    const index = data.findIndex(item => item._id === id)
+    
+    if (index === -1) {
+      throw new Error(`${resource} with id ${id} not found`)
+    }
+    
+    data[index] = {
+      ...data[index],
+      ...updatedItem,
+      updatedAt: new Date().toISOString()
+    }
+    
+    localStorage.setItem(resource, JSON.stringify(data))
+    return data[index]
+  }
+
+  // Mock DELETE method
+  mockDelete(resource, id) {
+    const data = JSON.parse(localStorage.getItem(resource) || '[]')
+    const index = data.findIndex(item => item._id === id)
+    
+    if (index === -1) {
+      throw new Error(`${resource} with id ${id} not found`)
+    }
+    
+    data.splice(index, 1)
+    localStorage.setItem(resource, JSON.stringify(data))
+    
+    return null // DELETE typically returns no content
   }
 
   // GET request
