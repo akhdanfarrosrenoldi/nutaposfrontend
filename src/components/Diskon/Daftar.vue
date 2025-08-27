@@ -6,22 +6,49 @@
         <h1 class="text-h5 font-weight-bold text-black mb-1">Daftar Diskon</h1>
         <p class="text-body-2 text-grey-darken-1 ma-0">Total jumlah diskon: {{ totalDiscounts }}</p>
       </div>
-      <v-btn
-        color="#3dae2f"
-        variant="elevated"
-        size="default"
-        rounded="xl"
-        class="px-3 py-2 text-none"
-        style="
-          font-weight: 500;
-          box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
-            0 1px 5px 0 rgba(0, 0, 0, 0.12);
-        "
-        prepend-icon="mdi-plus"
-        @click="openTambahDiskonModal"
-      >
-        Tambah diskon
-      </v-btn>
+      <!-- Conditional buttons based on selection -->
+      <div v-if="selectedItems.length === 0">
+        <v-btn
+          color="#3dae2f"
+          variant="elevated"
+          size="default"
+          rounded="xl"
+          class="px-3 py-2 text-none"
+          style="
+            font-weight: 500;
+            box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+              0 1px 5px 0 rgba(0, 0, 0, 0.12);
+          "
+          prepend-icon="mdi-plus"
+          @click="openTambahDiskonModal"
+        >
+          Tambah diskon
+        </v-btn>
+      </div>
+      <div v-else class="d-flex gap-2">
+        <v-btn
+          color="grey-lighten-1"
+          variant="outlined"
+          size="default"
+          rounded="xl"
+          class="px-4 py-2 text-none"
+          style="font-weight: 500;"
+          @click="cancelSelection"
+        >
+          Batalkan
+        </v-btn>
+        <v-btn
+          color="error"
+          variant="flat"
+          size="default"
+          rounded="xl"
+          class="px-4 py-2 text-none"
+          style="font-weight: 500;"
+          @click="openDeleteConfirmModal"
+        >
+          Hapus
+        </v-btn>
+      </div>
     </div>
 
     <!-- Search and Filter Bar -->
@@ -64,6 +91,15 @@
         hide-default-footer
         style="background-color: white"
       >
+        <!-- Custom select all checkbox for selected items only -->
+        <template v-slot:header.data-table-select>
+          <v-checkbox-btn
+            :model-value="selectedItems.length === filteredDiscounts.length && filteredDiscounts.length > 0"
+            :indeterminate="selectedItems.length > 0 && selectedItems.length < filteredDiscounts.length"
+            @update:model-value="toggleSelectedItems"
+            color="success"
+          ></v-checkbox-btn>
+        </template>
         <!-- Custom header for Nama Diskon -->
         <template v-slot:header.name>
           <div class="d-flex align-center">
@@ -137,47 +173,12 @@
     />
 
     <!-- Delete Confirmation Modal -->
-    <v-dialog v-model="showDeleteConfirmModal" max-width="400">
-      <v-card class="rounded-lg">
-        <v-card-title class="text-h6 font-weight-bold pa-6 pb-2"> Hapus Diskon </v-card-title>
-
-        <v-card-text class="pa-6 pt-2">
-          <p class="text-body-1 mb-0">
-            Apakah Anda yakin ingin menghapus diskon
-            <span v-if="selectedItems.length === 1">[{{ selectedItems[0].name }}]</span>
-            <span v-else>yang dipilih</span>?
-          </p>
-          <ul v-if="selectedItems.length > 1" class="mt-2 text-body-2">
-            <li v-for="item in selectedItems" :key="item.id">
-              Diskon yang dihapus tidak bisa dikembalikan lagi.
-            </li>
-          </ul>
-          <p v-else class="text-body-2 mt-2 mb-0">
-            • Diskon yang dihapus tidak bisa dikembalikan lagi.
-          </p>
-        </v-card-text>
-
-        <v-card-actions class="pa-6 pt-0">
-          <v-spacer></v-spacer>
-          <v-btn
-            color="grey-lighten-1"
-            variant="outlined"
-            class="text-none font-weight-medium mr-2"
-            @click="cancelDelete"
-          >
-            Batalkan
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            class="text-none font-weight-medium"
-            @click="confirmDelete"
-          >
-            Hapus
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <HapusDiskonModal
+      v-model="showDeleteConfirmation"
+      :selected-items="selectedItems"
+      @confirm="confirmDelete"
+      @cancel="cancelDeleteConfirmation"
+    />
 
     <!-- Notification Snackbar -->
     <v-snackbar
@@ -206,8 +207,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import UbahDiskonModal from "./modal/UbahDiskonModal.vue";
+import { ref, computed, onMounted } from 'vue'
+import UbahDiskonModal from './modal/UbahDiskonModal.vue'
+import HapusDiskonModal from './modal/HapusDiskonModal.vue'
 
 // Props
 const props = defineProps({
@@ -230,7 +232,7 @@ const showUbahDiskonModal = ref(false);
 const selectedDiscount = ref({});
 const showNotification = ref(false);
 const notificationMessage = ref("");
-const showDeleteConfirmModal = ref(false);
+const showDeleteConfirmation = ref(false);
 
 // Sample data
 const outlets = ref([
@@ -301,12 +303,12 @@ const cancelSelection = () => {
   selectedItems.value = [];
 };
 
-const openDeleteConfirmModal = () => {
-  showDeleteConfirmModal.value = true;
+const openDeleteConfirmation = () => {
+  showDeleteConfirmation.value = true
 };
 
 const confirmDelete = () => {
-  const selectedIds = selectedItems.value.map((item) => item.id);
+  const selectedIds = selectedItems.value.map((item) => item._id || item.id);
   emit("delete-discounts", selectedIds);
 
   // Show notification
@@ -315,11 +317,21 @@ const confirmDelete = () => {
 
   // Reset selection and close modal
   selectedItems.value = [];
-  showDeleteConfirmModal.value = false;
+  showDeleteConfirmation.value = false;
 };
 
-const cancelDelete = () => {
-  showDeleteConfirmModal.value = false;
+const cancelDeleteConfirmation = () => {
+  showDeleteConfirmation.value = false;
+};
+
+const toggleSelectedItems = (value) => {
+  if (value) {
+    // If checking, select all currently filtered items
+    selectedItems.value = [...filteredDiscounts.value];
+  } else {
+    // If unchecking, clear all selections
+    selectedItems.value = [];
+  }
 };
 
 // Initialize

@@ -194,9 +194,9 @@ const submitForm = async () => {
   isSubmitting.value = true
   
   try {
-    // Emit the form data
+    // Emit the form data with API-compatible ID
     emit('submit', {
-      id: props.discountData.id,
+      id: props.discountData._id || props.discountData.id,
       nama: formData.value.nama.trim(),
       nilai: parseFloat(formData.value.nilai),
       tipe: formData.value.tipe

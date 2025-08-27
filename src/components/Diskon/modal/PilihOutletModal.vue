@@ -128,9 +128,6 @@ const loadOutlets = async () => {
     loading.value = true;
     error.value = null;
 
-    // Initialize sample data if needed
-    await ApiService.initializeSampleData();
-
     // Fetch outlets from API
     const data = await ApiService.getOutlets();
     outlets.value = data || [];

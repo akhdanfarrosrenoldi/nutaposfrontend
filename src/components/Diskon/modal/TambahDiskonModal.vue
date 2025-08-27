@@ -137,6 +137,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  discountList: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 // Emits
@@ -174,10 +178,21 @@ const diskonRules = [
   },
 ];
 
+// Check for duplicate discount name
+const isDuplicateName = computed(() => {
+  if (!formData.value.namaDiskon) return false;
+  return props.discountList.some(
+    (discount) => discount.name.toLowerCase() === formData.value.namaDiskon.toLowerCase()
+  );
+});
+
 // Error messages
 const namaDiskonError = computed(() => {
   if (hasSubmitted.value && !formData.value.namaDiskon) {
     return "Nama diskon tidak boleh kosong";
+  }
+  if (isDuplicateName.value) {
+    return "Nama diskon sudah digunakan, silahkan gunakan nama lain";
   }
   return "";
 });
@@ -212,6 +227,11 @@ const submitForm = async () => {
 
   // Validate form
   if (!formData.value.namaDiskon || !formData.value.nilaiDiskon) {
+    return;
+  }
+
+  // Check for duplicate name
+  if (isDuplicateName.value) {
     return;
   }
 

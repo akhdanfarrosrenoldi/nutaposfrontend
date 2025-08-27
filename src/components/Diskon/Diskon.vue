@@ -108,7 +108,11 @@
         <PilihOutletModal v-model="showOutletModal" @outlet-selected="onOutletSelected" />
 
         <!-- Tambah Diskon Modal -->
-        <TambahDiskonModal v-model="showTambahDiskonModal" @submit="onDiskonSubmit" />
+        <TambahDiskonModal 
+          v-model="showTambahDiskonModal" 
+          :discount-list="discountList"
+          @submit="onDiskonSubmit" 
+        />
 
         <!-- Footer -->
         <v-row v-if="discountList.length === 0" class="ma-0 mt-auto">
@@ -125,10 +129,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import PilihOutletModal from "./modal/PilihOutletModal.vue";
 import TambahDiskonModal from "./modal/TambahDiskonModal.vue";
 import Daftar from "./Daftar.vue";
+import ApiService from "@/services/api.js";
 
 // Reactive state
 const showOutletModal = ref(false);
@@ -155,19 +160,16 @@ const onDiskonSubmit = async (diskonData) => {
   try {
     console.log("Diskon data:", diskonData);
 
-    // Add new discount to the list
-    const newDiscount = {
-      id: Date.now(), // Simple ID generation
+    // Save discount to API
+    const newDiscount = await ApiService.createDiscount({
       name: diskonData.nama,
       value: diskonData.nilai,
       type: diskonData.tipe,
       isNew: true,
-    };
+    });
 
+    // Add new discount to the list
     discountList.value.push(newDiscount);
-
-    // TODO: Implement API call to save discount
-    // await ApiService.post('/diskon', diskonData);
 
     showTambahDiskonModal.value = false;
   } catch (error) {
@@ -179,27 +181,62 @@ const backToEmptyState = () => {
   discountList.value = [];
 };
 
-const onDiskonUpdate = (updatedData) => {
-  const index = discountList.value.findIndex((item) => item.id === updatedData.id);
-  if (index !== -1) {
-    discountList.value[index] = {
-      ...discountList.value[index],
+const onDiskonUpdate = async (updatedData) => {
+  try {
+    // Update discount in API
+    await ApiService.updateDiscount(updatedData.id, {
       name: updatedData.nama,
       value: updatedData.nilai,
       type: updatedData.tipe,
-    };
+    });
+
+    // Update local list
+    const index = discountList.value.findIndex((item) => item._id === updatedData.id);
+    if (index !== -1) {
+      discountList.value[index] = {
+        ...discountList.value[index],
+        name: updatedData.nama,
+        value: updatedData.nilai,
+        type: updatedData.tipe,
+      };
+    }
+  } catch (error) {
+    console.error("Error updating discount:", error);
   }
 };
 
-const onDiskonDelete = (selectedIds) => {
-  // Remove selected discounts from the list
-  discountList.value = discountList.value.filter((item) => !selectedIds.includes(item.id));
+const onDiskonDelete = async (selectedIds) => {
+  try {
+    // Delete discounts from API
+    for (const id of selectedIds) {
+      await ApiService.deleteDiscount(id);
+    }
 
-  // TODO: Implement API call to delete discounts
-  // await ApiService.delete('/diskon', { ids: selectedIds });
+    // Remove selected discounts from the list
+    discountList.value = discountList.value.filter((item) => !selectedIds.includes(item._id));
 
-  console.log("Deleted discount IDs:", selectedIds);
+    console.log("Deleted discount IDs:", selectedIds);
+  } catch (error) {
+    console.error("Error deleting discounts:", error);
+  }
 };
+
+// Load discounts from API
+const loadDiscounts = async () => {
+  try {
+    if (ApiService.isConfigured()) {
+      const discounts = await ApiService.getDiscounts();
+      discountList.value = discounts || [];
+    }
+  } catch (error) {
+    console.error("Error loading discounts:", error);
+  }
+};
+
+// Load discounts when component mounts
+onMounted(() => {
+  loadDiscounts();
+});
 </script>
 
 <style>
