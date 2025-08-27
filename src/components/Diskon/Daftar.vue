@@ -1,5 +1,56 @@
 <template>
   <div class="pa-6">
+    <!-- Header -->
+    <div class="d-flex justify-space-between align-center mb-6 mx-6">
+      <div>
+        <h1 class="text-h5 font-weight-bold text-black mb-1">Daftar Diskon</h1>
+        <p class="text-body-2 text-grey-darken-1 ma-0">Total jumlah diskon: {{ totalDiscounts }}</p>
+      </div>
+      <v-btn
+        color="#3dae2f"
+        variant="elevated"
+        size="default"
+        rounded="xl"
+        class="px-3 py-2 text-none"
+        style="
+          font-weight: 500;
+          box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+            0 1px 5px 0 rgba(0, 0, 0, 0.12);
+        "
+        prepend-icon="mdi-plus"
+        @click="openTambahDiskonModal"
+      >
+        Tambah diskon
+      </v-btn>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="d-flex gap-4 mb-6 mx-6">
+      <v-text-field
+        v-model="searchQuery"
+        placeholder="Cari diskon"
+        variant="outlined"
+        density="compact"
+        prepend-inner-icon="mdi-magnify"
+        hide-details
+        class="flex-grow-1"
+        style="max-width: 300px"
+      ></v-text-field>
+
+      <v-select
+        v-model="selectedOutlet"
+        :items="outlets"
+        item-title="name"
+        item-value="id"
+        placeholder="Kopi Anak Bangsa"
+        variant="outlined"
+        density="compact"
+        prepend-inner-icon="mdi-store"
+        hide-details
+        style="min-width: 200px"
+      ></v-select>
+    </div>
+
     <!-- Data Table -->
     <v-card class="rounded-lg mx-6" elevation="1" style="background-color: white">
       <v-data-table
@@ -141,6 +192,16 @@
         <v-btn color="white" variant="text" @click="showNotification = false"> Tutup </v-btn>
       </template>
     </v-snackbar>
+
+    <!-- Footer -->
+    <v-row class="ma-0 mt-auto">
+      <v-col cols="12" class="pa-4">
+        <div class="text-caption text-start">
+          <span class="text-grey">2024 </span>
+          <span class="text-black">© PT Nusantara Berkah Digital</span>
+        </div>
+      </v-col>
+    </v-row>
   </div>
 </template>
 

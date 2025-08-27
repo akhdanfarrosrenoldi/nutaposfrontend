@@ -3,7 +3,7 @@
     <v-main>
       <v-container fluid class="pa-0">
         <!-- Header -->
-        <v-row class="ma-0 pl-8 mt-8">
+        <v-row v-if="discountList.length === 0" class="ma-0 pl-8 mt-8">
           <v-col cols="12" class="pa-4">
             <h1 class="text-h5 font-weight-bold text-black mb-3">Daftar Diskon</h1>
             <v-btn
@@ -111,7 +111,7 @@
         <TambahDiskonModal v-model="showTambahDiskonModal" @submit="onDiskonSubmit" />
 
         <!-- Footer -->
-        <v-row class="ma-0 mt-auto">
+        <v-row v-if="discountList.length === 0" class="ma-0 mt-auto">
           <v-col cols="12" class="pa-4">
             <div class="text-caption text-start">
               <span class="text-grey">2024 </span>
