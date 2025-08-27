@@ -72,5 +72,8 @@ export default createVuetify({
     VCard: {
       elevation: 1
     }
+  },
+  typography: {
+    fontFamily: 'Inter, sans-serif'
   }
 })

@@ -3,30 +3,51 @@
     <v-main>
       <v-container fluid class="pa-0">
         <!-- Header -->
-        <v-row class="ma-0">
+        <v-row class="ma-0 pl-8 mt-8">
           <v-col cols="12" class="pa-4">
             <h1 class="text-h5 font-weight-bold text-black mb-3">Daftar Diskon</h1>
             <v-btn
               variant="outlined"
               size="small"
-              class="text-none"
-              prepend-icon="mdi-store"
+              class="text-none px-4"
+              rounded="lg"
+              style="border: 1px solid #e0e0e0; min-width: 20px; justify-content: flex-start"
               @click="openOutletModal"
             >
-              {{ selectedOutlet ? selectedOutlet.name : 'Pilih Outlet' }}
-              <v-icon class="ml-1">mdi-chevron-down</v-icon>
+              <template v-slot:prepend>
+                <v-img
+                  src="/src/assets/outlet-icon.svg"
+                  width="15"
+                  height="15"
+                  class="mr-2"
+                ></v-img>
+              </template>
+              <span class="flex-grow-1 text-left">{{
+                selectedOutlet ? selectedOutlet.name : "Pilih Outlet"
+              }}</span>
+              <v-icon class="ml-2" size="16" style="color: #666">mdi-chevron-down</v-icon>
             </v-btn>
           </v-col>
         </v-row>
 
         <!-- Content Area -->
         <div v-if="discountList.length === 0">
-          <v-row class="ma-0 fill-height" justify="center" align="center" style="min-height: 70vh">
+          <v-row
+            class="ma-0 fill-height"
+            justify="center"
+            align="center"
+            style="min-height: calc(100vh - 200px)"
+          >
             <v-col cols="12" class="text-center">
-              <v-card
-                variant="outlined"
-                class="mx-12 py-16 rounded-xl content-border"
-                style="border-color: #ecedef"
+              <div
+                class="mx-9 my-4 py-18 rounded-xl"
+                style="
+                  border: 1px solid #e0e0e0;
+                  min-height: calc(100vh - 230px);
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                "
               >
                 <!-- Illustration -->
                 <div class="illustration-container mb-8">
@@ -40,40 +61,42 @@
                 </div>
 
                 <!-- Main Message -->
-                <h2
-                  class="text-h6 font-weight-medium text-grey-darken-2 mb-3"
-                  :class="{ 'outlet-selected': selectedOutlet }"
-                >
-                  {{ selectedOutlet ? "Belum Ada Diskon" : outletDisplayText }}
-                </h2>
+                <h2 class="text-h6 mb-3 text-black" style="font-weight: 600">Belum Ada Diskon</h2>
 
                 <!-- Subtitle -->
-                <p class="text-body-2 text-grey mb-8">
-                Silahkan tambah diskon untuk menarik pelanggan dan meningkatkan penjualan.
-              </p>
+                <p class="text-body-2 text-black mb-2">
+                  Silahkan tambah diskon untuk menarik pelanggan dan
+                </p>
+                <p class="text-body-2 text-black mb-8">meningkatkan penjualan.</p>
 
-              <!-- Action Button -->
-              <v-btn
-                color="success"
-                variant="flat"
-                size="large"
-                rounded="lg"
-                class="px-8 py-3"
-                style="text-transform: none; font-weight: 500"
-                prepend-icon="mdi-plus"
-                @click="openTambahDiskonModal"
-              >
-                Tambah diskon
-              </v-btn>
-            </v-card>
-          </v-col>
-        </v-row>
+                <!-- Action Button -->
+                <div style="display: flex; justify-content: center">
+                  <v-btn
+                    color="#3dae2f"
+                    variant="elevated"
+                    size="default"
+                    rounded="xl"
+                    class="px-3 py-2 text-none"
+                    style="
+                      font-weight: 500;
+                      box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                        0 1px 5px 0 rgba(0, 0, 0, 0.12);
+                    "
+                    prepend-icon="mdi-plus"
+                    @click="openTambahDiskonModal"
+                  >
+                    Tambah diskon
+                  </v-btn>
+                </div>
+              </div>
+            </v-col>
+          </v-row>
         </div>
 
         <!-- Daftar Diskon Component -->
         <div v-if="discountList.length > 0">
-          <Daftar 
-            :discount-list="discountList" 
+          <Daftar
+            :discount-list="discountList"
             @back="backToEmptyState"
             @add-discount="openTambahDiskonModal"
             @update-discount="onDiskonUpdate"
@@ -82,21 +105,18 @@
         </div>
 
         <!-- Pilih Outlet Modal -->
-    <PilihOutletModal
-      v-model="showOutletModal"
-      @outlet-selected="onOutletSelected"
-    />
+        <PilihOutletModal v-model="showOutletModal" @outlet-selected="onOutletSelected" />
 
-    <!-- Tambah Diskon Modal -->
-    <TambahDiskonModal
-      v-model="showTambahDiskonModal"
-      @submit="onDiskonSubmit"
-    />
+        <!-- Tambah Diskon Modal -->
+        <TambahDiskonModal v-model="showTambahDiskonModal" @submit="onDiskonSubmit" />
 
         <!-- Footer -->
         <v-row class="ma-0 mt-auto">
           <v-col cols="12" class="pa-4">
-            <div class="text-caption text-grey text-start">2024 © PT Nusantara Berkah Digital</div>
+            <div class="text-caption text-start">
+              <span class="text-grey">2024 </span>
+              <span class="text-black">© PT Nusantara Berkah Digital</span>
+            </div>
           </v-col>
         </v-row>
       </v-container>
@@ -109,21 +129,12 @@ import { ref, computed } from "vue";
 import PilihOutletModal from "./modal/PilihOutletModal.vue";
 import TambahDiskonModal from "./modal/TambahDiskonModal.vue";
 import Daftar from "./Daftar.vue";
-import ApiService from "../../services/api.js";
 
 // Reactive state
 const showOutletModal = ref(false);
 const showTambahDiskonModal = ref(false);
 const selectedOutlet = ref(null);
 const discountList = ref([]);
-
-// Computed untuk menampilkan nama outlet atau pesan default
-const outletDisplayText = computed(() => {
-  if (selectedOutlet.value) {
-    return `${selectedOutlet.value.name} - ${selectedOutlet.value.address}`;
-  }
-  return "Belum ada outlet yang dipilih";
-});
 
 // Methods
 const openOutletModal = () => {
@@ -143,21 +154,21 @@ const openTambahDiskonModal = () => {
 const onDiskonSubmit = async (diskonData) => {
   try {
     console.log("Diskon data:", diskonData);
-    
+
     // Add new discount to the list
     const newDiscount = {
       id: Date.now(), // Simple ID generation
       name: diskonData.nama,
       value: diskonData.nilai,
       type: diskonData.tipe,
-      isNew: true
+      isNew: true,
     };
-    
+
     discountList.value.push(newDiscount);
-    
+
     // TODO: Implement API call to save discount
     // await ApiService.post('/diskon', diskonData);
-    
+
     showTambahDiskonModal.value = false;
   } catch (error) {
     console.error("Error saving discount:", error);
@@ -169,27 +180,26 @@ const backToEmptyState = () => {
 };
 
 const onDiskonUpdate = (updatedData) => {
-  const index = discountList.value.findIndex(item => item.id === updatedData.id);
+  const index = discountList.value.findIndex((item) => item.id === updatedData.id);
   if (index !== -1) {
     discountList.value[index] = {
       ...discountList.value[index],
       name: updatedData.nama,
       value: updatedData.nilai,
-      type: updatedData.tipe
+      type: updatedData.tipe,
     };
   }
 };
 
 const onDiskonDelete = (selectedIds) => {
   // Remove selected discounts from the list
-  discountList.value = discountList.value.filter(item => !selectedIds.includes(item.id));
-  
+  discountList.value = discountList.value.filter((item) => !selectedIds.includes(item.id));
+
   // TODO: Implement API call to delete discounts
   // await ApiService.delete('/diskon', { ids: selectedIds });
-  
-  console.log('Deleted discount IDs:', selectedIds);
-};
 
+  console.log("Deleted discount IDs:", selectedIds);
+};
 </script>
 
 <style>

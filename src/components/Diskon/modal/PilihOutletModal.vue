@@ -1,7 +1,10 @@
 <template>
-  <v-dialog v-model="dialog" max-width="500px" persistent>
-    <v-card class="rounded-xl" style="height: 90vh; background-color: white;">
-      <v-card-title class="d-flex justify-space-between align-center pa-4" style="padding-left: 24px; padding-right: 24px;">
+  <v-dialog v-model="dialog" persistent>
+    <v-card class="rounded-xl" style="height: 90vh; width: 30vw; background-color: white">
+      <v-card-title
+        class="d-flex justify-space-between align-center pa-4"
+        style="padding-left: 24px; padding-right: 24px"
+      >
         <span class="text-h6 font-weight-bold">Pilih Outlet</span>
         <v-btn icon variant="text" @click="closeModal">
           <v-icon>mdi-close</v-icon>
@@ -10,7 +13,10 @@
 
       <v-divider></v-divider>
 
-      <v-card-text class="pa-0" style="padding-left: 24px; padding-right: 24px; overflow-x: auto; overflow-x-color: #4CAF50;">
+      <v-card-text
+        class="pa-0"
+        style="padding-left: 24px; padding-right: 24px; overflow-x: auto; overflow-x-color: #4caf50"
+      >
         <!-- Search Bar -->
         <div class="pa-4">
           <v-text-field
@@ -41,15 +47,15 @@
           <!-- Empty State -->
           <div v-else-if="filteredOutlets.length === 0" class="text-center pa-8">
             <div v-if="searchQuery" class="empty-search-state">
-               <!-- No Result Found Illustration -->
-               <div class="illustration-container mb-4">
-                 <img 
-                   src="../../../assets/no-result-found.svg" 
-                   alt="Tidak ada hasil ditemukan"
-                   class="no-result-illustration"
-                 />
-               </div>
-             </div>
+              <!-- No Result Found Illustration -->
+              <div class="illustration-container mb-4">
+                <img
+                  src="../../../assets/no-result-found.svg"
+                  alt="Tidak ada hasil ditemukan"
+                  class="no-result-illustration"
+                />
+              </div>
+            </div>
             <div v-else class="empty-data-state">
               <v-icon color="grey" size="48" class="mb-3">mdi-store-outline</v-icon>
               <div class="text-body-2 text-grey-600">Belum ada data outlet</div>
@@ -68,9 +74,7 @@
               }"
             >
               <template v-slot:prepend>
-                <v-icon color="#E0E0E0" size="24" class="mr-3">
-                  mdi-store
-                </v-icon>
+                <v-icon color="#E0E0E0" size="24" class="mr-3"> mdi-store </v-icon>
               </template>
 
               <v-list-item-title class="font-weight-medium">
@@ -244,7 +248,7 @@ const selectOutlet = (outlet) => {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4CAF50;
+  background: #4caf50;
   border-radius: 4px;
 }
 
